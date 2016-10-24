@@ -5,6 +5,8 @@ import (
 	"os"
 	"regexp"
 	"time"
+	"strings"
+	"bytes"
 )
 
 type a struct {
@@ -14,10 +16,14 @@ type a struct {
 }
 
 func handleSession(name string) {
-	filepath := "/d/msys64/records/" + name
+	filepath := "/msys64/records/" + name
+	log.Println("start to handle "+filepath)
 	var currentSize int64
-    var waitingChars string
+    var waitingChars=""
+	var sessionStartTime int64
 	for {
+		
+
 		stat, err := os.Stat(filepath)
 		if err != nil {
 			log.Println(err)
@@ -25,16 +31,26 @@ func handleSession(name string) {
 		if currentSize < stat.Size() {
 			//file updated
 			f, err := os.Open(filepath)
+			defer f.Close()
 			if err != nil {
 				log.Println(err)
 			}
+			
+			//handle diff
 			diff := stat.Size() - currentSize
 			b := make([]byte, diff)
 			_, err = f.ReadAt(b, currentSize)
 			if err != nil {
 				log.Println(err)
 			}
-            waitingChars,err=get(b,waitingChars)
+			//handle the first line for timestamp
+			if currentSize==0{
+				a := bytes.IndexAny(b,"\n")
+				sessionStartTime=getStartTime(string(b[0:a]))
+				log.Println(sessionStartTime)
+				b = b[a+1:]
+			}
+            waitingChars,err=do(b,waitingChars)
 			currentSize = stat.Size()
 		} else {
 			//do nothing
@@ -43,11 +59,16 @@ func handleSession(name string) {
 	}
 }
 
-func get(b []byte,waitingChars string) (string,error) {
+func do(b []byte,waitingChars string) (string,error) {
     var remainChars=""
-    content:=string(b)
-	re := regexp.MustCompile("^\\$.*\n")
+	log.Println("@@@"+waitingChars+"@@@")
+    content:=waitingChars+string(b)
+	re := regexp.MustCompile("\\$.*\n")
 	allIndex := re.FindAllStringIndex(content, -1)
+	log.Println(allIndex)
+	if(len(allIndex)==0){
+		return content, nil
+	}
 	for i := 0; i < len(allIndex); i++ {
 		cur := allIndex[i]
 		command := content[cur[0]:cur[1]]
@@ -61,8 +82,8 @@ func get(b []byte,waitingChars string) (string,error) {
 			next = allIndex[i+1]
 		}
 
-		output := content[cur[1]:next[0]]
-        log.Printf("--%v--\n%v \n",command,output)
+		// output := content[cur[1]:next[0]]
+        log.Printf(">>>>%v,  %v\n",strings.TrimSpace(command),len(strings.TrimSpace(command)))
 		// startTime := gettime(cur[1])
 		// endTime := gettime(next[0])
 	}
@@ -71,4 +92,11 @@ func get(b []byte,waitingChars string) (string,error) {
 
 func gettime(index int) time.Time {
 	return time.Now()
+}
+
+func getStartTime(line string) int64{
+	timeString := line[18:]
+	const longForm = "Mon, Jan _2, 2006 3:04:05 PM"
+    t, _ := time.Parse(longForm, timeString)
+    return t.UnixNano()
 }

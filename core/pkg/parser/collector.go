@@ -1,13 +1,12 @@
 package parser
 
 import (
-	"fmt"
 	"io/ioutil"
 	"log"
 	"os"
 	"path/filepath"
 	"strings"
-    "time"
+	"time"
 )
 
 var (
@@ -16,24 +15,28 @@ var (
 )
 
 func init() {
-	f, err := os.OpenFile("test.log", os.O_APPEND|os.O_CREATE|os.O_RDWR, 0666)
-	if err != nil {
-		fmt.Printf("error opening file: %v", err)
+	// f, err := os.OpenFile("test.log", os.O_APPEND|os.O_CREATE|os.O_RDWR, 0666)
+	// if err != nil {
+	// 	fmt.Printf("error opening file: %v", err)
+	// }
+	// // assign it to the standard logger
+	// log.SetOutput(f)
+	if _, err := os.Stat(SessionStorageFile); os.IsNotExist(err) {
+		// os.Create(SessionStorageFile)
+	} else {
+		c, err := ioutil.ReadFile(SessionStorageFile)
+		if err != nil {
+			log.Println(err)
+			//Do something
+		}
+		SessionList = strings.Split(string(c), "\n")
 	}
-	// assign it to the standard logger
-	log.SetOutput(f)
-	content, err := ioutil.ReadFile(SessionStorageFile)
-	if err != nil {
-		log.Println(err)
-		//Do something
-	}
-	SessionList = strings.Split(string(content), "\n")
 }
 
 func Monitor() {
 
 	for {
-		files, _ := filepath.Glob("/d/msys64/records/script_*")
+		files, _ := filepath.Glob("/msys64/records/script_*")
 		for _, f := range files {
 			file := filepath.Base(f)
 			if containString(SessionList, file) {
@@ -44,11 +47,12 @@ func Monitor() {
 					//do
 					log.Println(err)
 				}
-                go handleSession(file)
+				go handleSession(file)
 			}
 		}
-        //scan folder every 35 seconds
-        time.Sleep(35 * time.Second)
+		log.Println("loop done")
+		//scan folder every 35 seconds
+		time.Sleep(35 * time.Second)
 	}
 }
 
