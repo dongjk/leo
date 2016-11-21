@@ -50,7 +50,6 @@ func Monitor() {
 				go handleSession(file)
 			}
 		}
-		log.Println("loop done")
 		//scan folder every 35 seconds
 		time.Sleep(35 * time.Second)
 	}
