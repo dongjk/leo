@@ -1,25 +1,33 @@
 package main
 
 import (
-    "fmt"
-    "net/http"
-    "log"
-    "io/ioutil"
+	"fmt"
+	"io/ioutil"
+	"log"
+	"net/http"
+	"time"
+
+	"github.com/dongjk/leo/core/pkg/storage"
 )
 
-func sayhelloName(w http.ResponseWriter, r *http.Request) {
-	b, _ := ioutil.ReadAll(r.Body)
-	_,_ = r.Body.Read(b);
-    fmt.Println(r.Method)
-    fmt.Println(string(b))  // print form information in server side
+var ds *storage.DataStore
 
-    fmt.Fprintf(w, "Hello astaxie!") // send data to client side
+func handleChromeInfo(w http.ResponseWriter, r *http.Request) {
+	b, _ := ioutil.ReadAll(r.Body)
+	_, _ = r.Body.Read(b)
+
+	ds.Insert("chrome", storage.ChromeInfo{time.Now().UnixNano(), string(b)})
+	fmt.Fprintf(w, "Hello astaxie!") // send data to client side
 }
 
 func main() {
-    http.HandleFunc("/", sayhelloName) // set router
-    err := http.ListenAndServe(":9090", nil) // set listen port
-    if err != nil {
-        log.Fatal("ListenAndServe: ", err)
-    }
+	ds, _ = storage.ConstructDataStore()
+	// if err != nil {
+	// 	log.Fatal(err)
+	// }
+	http.HandleFunc("/", handleChromeInfo)   // set router
+	err := http.ListenAndServe(":9090", nil) // set listen port
+	if err != nil {
+		log.Fatal("ListenAndServe: ", err)
+	}
 }

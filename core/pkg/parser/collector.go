@@ -7,6 +7,8 @@ import (
 	"path/filepath"
 	"strings"
 	"time"
+
+	"github.com/dongjk/leo/core/pkg/storage"
 )
 
 var (
@@ -34,7 +36,6 @@ func init() {
 }
 
 func Monitor() {
-
 	for {
 		files, _ := filepath.Glob("/msys64/records/script_*")
 		for _, f := range files {
@@ -47,11 +48,34 @@ func Monitor() {
 					//do
 					log.Println(err)
 				}
-				go handleSession(file)
+				c := make(chan storage.ShellInteractive)
+				go printInfo(c)
+				sp := ShellParser{InfoChan: c}
+				go sp.handleSession(file)
 			}
 		}
 		//scan folder every 35 seconds
 		time.Sleep(35 * time.Second)
+	}
+}
+
+func printInfo(infoChan chan storage.ShellInteractive) {
+	ds, err := storage.ConstructDataStore()
+	if err != nil {
+		log.Fatal("can't access DB")
+	}
+	for {
+		a := <-infoChan
+		if(a.Cmd=="" && a.Starttime!=0){
+			continue
+		}else{
+			ds.Insert("shell", &a)
+		}
+
+		if a.Cmd != "" {
+			log.Println(a.Cmd)
+
+		}
 	}
 }
 
