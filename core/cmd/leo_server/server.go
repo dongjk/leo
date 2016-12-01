@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -17,7 +16,7 @@ func handleChromeInfo(w http.ResponseWriter, r *http.Request) {
 	_, _ = r.Body.Read(b)
 
 	ds.Insert("chrome", storage.ChromeInfo{time.Now().UnixNano(), string(b)})
-	fmt.Fprintf(w, "Hello astaxie!") // send data to client side
+	log.Println(string(b))
 }
 
 func main() {
