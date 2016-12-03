@@ -9,7 +9,7 @@ import (
 
 type keyInfo struct {
 	Label string
-	time  int64
+	Time  int64
 }
 
 func main() {
