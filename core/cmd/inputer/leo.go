@@ -17,6 +17,7 @@ func main() {
 	if err !=nil{
 		fmt.Printf("connect DB error， %v", err)
 	}
+	
 	time := time.Now().UnixNano()
 
 	for _, arg := range os.Args[1:] {
