@@ -8,7 +8,7 @@ import (
 )
 
 type keyInfo struct {
-	Label string 
+	Label string
 	Time  int64
 }
 
