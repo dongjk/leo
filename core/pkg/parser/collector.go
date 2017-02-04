@@ -12,7 +12,9 @@ import (
 )
 
 var (
-	SessionStorageFile = "session_storage_file.txt"
+	// SessionStorageFile store file name list
+	SessionStorageFile = "/msys64/records/session_storage_file.txt"
+	// SessionList store sessions in current context
 	SessionList        []string
 )
 
@@ -24,7 +26,7 @@ func init() {
 	// // assign it to the standard logger
 	// log.SetOutput(f)
 	if _, err := os.Stat(SessionStorageFile); os.IsNotExist(err) {
-		// os.Create(SessionStorageFile)
+		os.Create(SessionStorageFile)
 	} else {
 		c, err := ioutil.ReadFile(SessionStorageFile)
 		if err != nil {
@@ -35,6 +37,9 @@ func init() {
 	}
 }
 
+/*
+Monitor montior script record fils and start to extract cmd and output from it.
+*/
 func Monitor() {
 	for {
 		files, _ := filepath.Glob("/msys64/records/script_*")
@@ -66,9 +71,9 @@ func printInfo(infoChan chan storage.ShellInteractive) {
 	}
 	for {
 		a := <-infoChan
-		if(a.Cmd=="" && a.Starttime!=0){
+		if a.Cmd == "" && a.Starttime != 0 {
 			continue
-		}else{
+		} else {
 			ds.Insert("shell", &a)
 		}
 
@@ -97,8 +102,6 @@ func containString(list []string, s string) bool {
 	for _, v := range list {
 		if v == s {
 			return true
-		} else {
-			continue
 		}
 	}
 	return false
